@@ -1,6 +1,6 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
-# Install build tools needed for ChromaDB
+# Install build tools needed for C++ / ChromaDB dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt-get/lists/*
