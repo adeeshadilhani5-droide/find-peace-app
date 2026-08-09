@@ -2,7 +2,7 @@
 
 An AI-powered mobile application that delivers verified Dhammapada stanzas and insights using a Retrieval-Augmented Generation (RAG) architecture to eliminate hallucinations.
 
----
+
 
 ## Key Features
 * **Zero-Hallucination Answers:** Uses RAG to ground responses strictly in verified Dhammapada texts.
@@ -10,7 +10,7 @@ An AI-powered mobile application that delivers verified Dhammapada stanzas and i
 * **Modern Mobile Interface:** Built with Flutter for a smooth cross-platform user experience.
 * **Cloud Architecture:** Hosted backend services on Google Cloud.
 
----
+
 
 ##  Tech Stack
 
@@ -20,7 +20,7 @@ An AI-powered mobile application that delivers verified Dhammapada stanzas and i
 * **Embeddings & AI:** Sentence-Transformers, LLM / Generative AI
 * **Cloud Infrastructure:** Google Cloud Platform
 
----
+
 
 ##  Project Structure
 
