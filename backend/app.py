@@ -10,9 +10,9 @@ from langchain_chroma import Chroma
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 
-# ---------------------------------------------------------------------------
+
 # 1. Setup Environment & Flask App
-# ---------------------------------------------------------------------------
+
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 
@@ -61,9 +61,9 @@ def init_db():
 
 init_db()
 
-# ---------------------------------------------------------------------------
+
 # 3. LangChain & Model Setup
-# ---------------------------------------------------------------------------
+
 embeddings = GoogleGenerativeAIEmbeddings(
     model="models/gemini-embedding-001",
     google_api_key=API_KEY
