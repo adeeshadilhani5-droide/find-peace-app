@@ -12,7 +12,7 @@ An AI-powered mobile application that delivers verified Dhammapada stanzas and i
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 * **Frontend:** Flutter (Dart)
 * **Backend:** Python, Flask REST API
@@ -22,9 +22,25 @@ An AI-powered mobile application that delivers verified Dhammapada stanzas and i
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 find-peace-app/
 ├── backend/      # Python Flask API & ChromaDB RAG Pipeline
 └── frontend/     # Flutter Mobile Application Source Code
+
+Quick Start
+ Backend Setup
+
+cd backend
+python -m venv venv
+# Activate virtual environment
+# Windows: venv\Scripts\activate, Mac/Linux: source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+
+Frontend Setup
+
+cd frontend
+flutter pub get
+flutter run
