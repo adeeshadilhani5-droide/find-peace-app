@@ -20,7 +20,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
   // - Chrome / Windows / Web: 'http://127.0.0.1:5000'
   // - Android Emulator:       'http://10.0.2.2:5000'
   // - Physical Device:        'http://<YOUR_LOCAL_IP>:5000'
-  final String baseUrl = 'http://127.0.0.1:5000';
+  final String baseUrl = 'https://find-peace-app-314665978439.asia-southeast1.run.app';
 
   final TextEditingController _inputController = TextEditingController();
   bool _isLoading = false;
