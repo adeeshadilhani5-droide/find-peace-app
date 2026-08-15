@@ -31,8 +31,13 @@ os.environ["GOOGLE_API_KEY"] = API_KEY
 
 app = Flask(__name__)
 
-# Chrome Web සහ Custom Headers (X-Admin-Token) සඳහා CORS නිවැරදිව Configure කිරීම
-CORS(app, resources={r"/*": {"origins": "*"}}, allow_headers=["Content-Type", "Authorization", "X-Admin-Token"])
+# Cross-Origin Requests (CORS) සඳහා සියලුම Methods, Origins සහ Headers Allow කිරීම
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    allow_headers=["Content-Type", "Authorization", "X-Admin-Token"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+)
 
 DB_PATH = os.path.join(BASE_DIR, "dhammapada.db")
 CHROMA_PATH = os.path.join(BASE_DIR, "chroma_db")
@@ -72,6 +77,10 @@ def init_db():
                 FOREIGN KEY (session_id) REFERENCES sessions (id) ON DELETE CASCADE
             )
         ''')
+        
+        # Database Indexes keeping queries fast as logs grow
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_messages_user_email ON messages(user_email)')
         
         # Migration Check
         cursor.execute("PRAGMA table_info(messages)")
@@ -140,8 +149,11 @@ def require_admin_auth(f):
     return decorated_function
 
 
-@app.route("/api/admin/login", methods=["POST"])
+@app.route("/api/admin/login", methods=["POST", "OPTIONS"])
 def admin_login():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+
     data = request.get_json() or {}
     email = data.get("email")
     password = data.get("password")
@@ -305,7 +317,7 @@ def chat():
 
 # 7. DYNAMIC ADMIN DASHBOARD ENDPOINTS
 
-@app.route('/api/admin/stats', methods=['GET'])
+@app.route('/api/admin/stats', methods=['GET', 'OPTIONS'])
 @require_admin_auth
 def get_admin_stats():
     conn = get_db_connection()
@@ -339,7 +351,7 @@ def get_admin_stats():
     }), 200
 
 
-@app.route('/api/admin/queries', methods=['GET'])
+@app.route('/api/admin/queries', methods=['GET', 'OPTIONS'])
 @require_admin_auth
 def get_recent_queries():
     conn = get_db_connection()
@@ -366,7 +378,6 @@ def get_recent_queries():
     return jsonify(logs), 200
 
 
-# NEW: Questions API Endpoint
 @app.route('/api/admin/questions', methods=['GET', 'OPTIONS'])
 @require_admin_auth
 def get_admin_questions():
@@ -394,7 +405,6 @@ def get_admin_questions():
     return jsonify(questions), 200
 
 
-# NEW: Citations API Endpoint
 @app.route('/api/admin/citations', methods=['GET', 'OPTIONS'])
 @require_admin_auth
 def get_admin_citations():
@@ -425,7 +435,7 @@ def get_admin_citations():
     return jsonify(citations), 200
 
 
-# 8. Server එක ආරම්භ කිරීම
+# 8. Server start
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
