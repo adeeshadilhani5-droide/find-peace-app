@@ -17,11 +17,8 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# .env ෆයිල් එක ලෝඩ් කර ගැනීම
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 API_KEY = os.getenv("GOOGLE_API_KEY")
-
-# Admin Security සඳහා Secret Token එක ලබාගැනීම
 ADMIN_SECRET_KEY = os.getenv("ADMIN_SECRET_KEY", "admin_secret_token_123")
 
 if not API_KEY:
@@ -31,7 +28,10 @@ os.environ["GOOGLE_API_KEY"] = API_KEY
 
 app = Flask(__name__)
 
-# Cross-Origin Requests (CORS) සඳහා සියලුම Methods, Origins සහ Headers Allow කිරීම
+# Trailing slashes (/api/admin/stats vs /api/admin/stats/) නිසා ඇතිවන 404 වැළැක්වීම
+app.url_map.strict_slashes = False
+
+# Cross-Origin Requests (CORS) සම්පූර්ණයෙන්ම සක්‍රිය කිරීම
 CORS(
     app,
     resources={r"/*": {"origins": "*"}},
@@ -54,7 +54,6 @@ def init_db():
     with get_db_connection() as conn:
         cursor = conn.cursor()
         
-        # Sessions Table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +62,6 @@ def init_db():
             )
         ''')
         
-        # Messages Table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,11 +76,9 @@ def init_db():
             )
         ''')
         
-        # Database Indexes keeping queries fast as logs grow
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_messages_user_email ON messages(user_email)')
         
-        # Migration Check
         cursor.execute("PRAGMA table_info(messages)")
         existing_cols = [col[1] for col in cursor.fetchall()]
         
@@ -138,9 +134,9 @@ prompt = ChatPromptTemplate.from_messages([
 def require_admin_auth(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Pre-flight OPTIONS request වලදී token check නොකර සාර්ථකව පසුකර යැවීම
+        # Browser Pre-flight OPTIONS requests සකස් කිරීම
         if request.method == "OPTIONS":
-            return f(*args, **kwargs)
+            return jsonify({"status": "ok"}), 200
 
         auth_header = request.headers.get("X-Admin-Token") or request.headers.get("Authorization")
         if not auth_header or ADMIN_SECRET_KEY not in auth_header:
@@ -170,8 +166,10 @@ def admin_login():
 
 # 5. Chat Sessions API Endpoints
 
-@app.route("/sessions", methods=["GET"])
+@app.route("/sessions", methods=["GET", "OPTIONS"])
 def get_sessions():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     conn = get_db_connection()
     sessions = conn.execute(
         "SELECT id, title, created_at FROM sessions ORDER BY id DESC"
@@ -180,8 +178,10 @@ def get_sessions():
     return jsonify([dict(s) for s in sessions]), 200
 
 
-@app.route("/sessions", methods=["POST"])
+@app.route("/sessions", methods=["POST", "OPTIONS"])
 def create_session():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("INSERT INTO sessions (title) VALUES (?)", ("New Chat",))
@@ -191,8 +191,10 @@ def create_session():
     return jsonify({"id": session_id, "title": "New Chat"}), 201
 
 
-@app.route("/sessions/<int:session_id>", methods=["DELETE"])
+@app.route("/sessions/<int:session_id>", methods=["DELETE", "OPTIONS"])
 def delete_session(session_id):
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     conn = get_db_connection()
     conn.execute("DELETE FROM messages WHERE session_id = ?", (session_id,))
     conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
@@ -201,8 +203,10 @@ def delete_session(session_id):
     return jsonify({"message": "Session deleted"}), 200
 
 
-@app.route("/sessions/<int:session_id>/messages", methods=["GET"])
+@app.route("/sessions/<int:session_id>/messages", methods=["GET", "OPTIONS"])
 def get_session_messages(session_id):
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     conn = get_db_connection()
     raw_msgs = conn.execute(
         "SELECT id, role, content, sources FROM messages WHERE session_id = ? ORDER BY id ASC",
@@ -221,8 +225,10 @@ def get_session_messages(session_id):
 
 # 6. Main User Chat API Endpoint
 
-@app.route("/chat", methods=["POST"])
+@app.route("/chat", methods=["POST", "OPTIONS"])
 def chat():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
     start_time = time.time()
     try:
         data = request.get_json() or {}
@@ -435,7 +441,7 @@ def get_admin_citations():
     return jsonify(citations), 200
 
 
-# 8. Server start
+# 8. Server Start
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
